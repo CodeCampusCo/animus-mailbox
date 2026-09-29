@@ -2,8 +2,10 @@
 
 A Claude Code plugin that connects every session to [animus](https://github.com/CodeCampusCo/animus),
 the voice assistant on your Mac. A session can tell animus news, a finished result or a question;
-while it waits on you, it asks animus to speak up; and animus can send it your words. The file
-format both sides share is animus's `docs/agent-mailbox.md`.
+while it waits on you, it asks animus to speak up; and animus can send it your words, which the
+session reads as outside input, not your command, and answers at once. It keeps a one-word status
+(idle, working, waiting) so animus can say whether a message was delivered and whether the
+session is busy. The file format both sides share is animus's `docs/agent-mailbox.md`.
 
 ## Install
 
