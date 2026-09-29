@@ -15,8 +15,8 @@ The repository is private for now, so installing needs read access to it.
 ```
 
 Choose user scope when asked, so every session on the machine is connected. It needs `python3` on
-the `PATH`. The hooks and the inbox monitor start when a session starts or resumes, or after
-`/reload-plugins` in a running one.
+the `PATH`. The hooks and the inbox monitor start when a session starts or resumes; a session that was already
+running picks them up once it is resumed (`/reload-plugins` does not rerun the start hook).
 
 ## Development
 
