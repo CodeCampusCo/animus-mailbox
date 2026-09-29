@@ -1,7 +1,7 @@
 {
   "name": "animus-mailbox",
   "description": "Lets animus, the voice assistant on your Mac, hear from and speak to this Claude Code session.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": {
     "name": "CodeCampusCo"
   }
