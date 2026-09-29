@@ -1,0 +1,13 @@
+{
+  "name": "animus-mailbox",
+  "owner": {
+    "name": "CodeCampusCo"
+  },
+  "plugins": [
+    {
+      "name": "animus-mailbox",
+      "source": "./",
+      "description": "Lets animus, the voice assistant on your Mac, hear from and speak to Claude Code sessions."
+    }
+  ]
+}
