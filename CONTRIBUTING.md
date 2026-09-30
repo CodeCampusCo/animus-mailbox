@@ -9,17 +9,19 @@ anything larger than a fix, open an issue first.
 ## How changes land
 
 1. Fork (or branch), make the change, and open a pull request against `main`.
-2. CI must pass: `python3 -m unittest discover -s tests` on Linux.
+2. CI must pass: the unit tests on Linux and macOS, and `claude plugin validate --strict` on the
+   marketplace, plugin and skill manifests.
 3. Every review conversation must be resolved before the pull request can merge.
 
 ## Working on it
 
 ```sh
 python3 -m unittest discover -s tests
+claude plugin validate --strict .
 claude --plugin-dir .
 ```
 
-The second line starts a Claude Code session with the plugin from this folder instead of the
+The last line starts a Claude Code session with the plugin from this folder instead of the
 installed one.
 
 - `scripts/mailbox.py` does all the work; `hooks/hooks.json`, `monitors/monitors.json` and the
