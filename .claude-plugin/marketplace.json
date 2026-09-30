@@ -7,7 +7,7 @@
     {
       "name": "animus-mailbox",
       "source": "./",
-      "description": "Lets animus, the voice assistant on your Mac, hear from and speak to Claude Code sessions."
+      "description": "Lets Animus, the voice assistant on your Mac, hear from and speak to Claude Code sessions."
     }
   ]
 }

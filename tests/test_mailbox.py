@@ -232,7 +232,7 @@ class Mailbox(unittest.TestCase):
         self.assertEqual(self.run_hook("stop", stop), "")   # never got a message: never held
         self.run_hook("prompt", {"session_id": "3fa9c1d2-aaaa", "prompt": "earlier"})
         self.arrive(mailbox)
-        self.run_hook("prompt", {"session_id": "3fa9c1d2-aaaa", "prompt": "<task-notification>animus</task-notification>"})
+        self.run_hook("prompt", {"session_id": "3fa9c1d2-aaaa", "prompt": "<task-notification>Animus</task-notification>"})
         self.run_hook("prompt", {"session_id": "3fa9c1d2-aaaa", "prompt": "<cross-session-message>hi"})
         state = json.loads((mailbox / "state.json").read_text())
         (mailbox / "state.json").write_text(json.dumps(dict(state, turn_start=time.time() - 700)))
@@ -262,7 +262,7 @@ class Mailbox(unittest.TestCase):
         self.run_hook("tool-done", session)
         self.assertEqual(status(), "working")
         self.arrive(mailbox)
-        self.run_hook("stop", session)   # held: animus has no answer yet, so the turn goes on
+        self.run_hook("stop", session)   # held: Animus has no answer yet, so the turn goes on
         self.assertEqual(status(), "working")
         self.run_hook("stop", dict(session, stop_hook_active=True))
         self.assertEqual(status(), "idle")
