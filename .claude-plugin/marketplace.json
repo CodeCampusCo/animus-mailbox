@@ -1,5 +1,6 @@
 {
   "name": "animus-mailbox",
+  "description": "Add-ons that let Animus, the voice assistant on your Mac, talk with the coding agents on the same machine.",
   "owner": {
     "name": "CodeCampusCo"
   },
@@ -7,7 +8,7 @@
     {
       "name": "animus-mailbox",
       "source": "./",
-      "description": "Lets animus, the voice assistant on your Mac, hear from and speak to Claude Code sessions."
+      "description": "Lets Animus, the voice assistant on your Mac, hear from and speak to Claude Code sessions."
     }
   ]
 }

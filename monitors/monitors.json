@@ -2,7 +2,7 @@
   {
     "name": "inbox",
     "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/mailbox.py\" watch \"${CLAUDE_PLUGIN_DATA}\"",
-    "description": "Messages from animus in this session's inbox",
+    "description": "Messages from Animus in this session's inbox",
     "when": "always"
   }
 ]
