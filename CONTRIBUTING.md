@@ -29,6 +29,8 @@ installed one.
 - A hook must never fail the session: errors go to stderr and the exit code stays 0.
 - Add or update tests in `tests/test_mailbox.py` with any change to the script. Tests set
   `ANIMUS_AGENTS_DIR` to a temporary folder, so they never touch the real `~/.agent-mailbox`.
+- `tests/test_manifests.py` checks what `claude plugin validate` does not: every JSON manifest
+  parses, and each hook and monitor command runs a subcommand `scripts/mailbox.py` has.
 - Bump `version` in `.claude-plugin/plugin.json` when a change should reach installed copies.
 
 ## Commits
