@@ -87,9 +87,9 @@ def wait_minutes(mailbox):
         return DEFAULT_WAIT_MINUTES
 
 
-def sanitize(s):
+def sanitize(s, empty="session"):
     s = re.sub(r"[^a-z0-9_-]+", "-", s.lower()).strip("-")
-    return s[:40] or "session"
+    return s[:40] or empty
 
 
 def alive(pid):
@@ -148,6 +148,34 @@ def write_pointer(name, mailbox, cwd, pid):
     write_atomic(pointer_path(name), json.dumps(body))
 
 
+def move_pointer(mailbox, state, name, cwd, pid):
+    """Points name at this mailbox, and takes the session's old name off it."""
+    write_pointer(name, mailbox, cwd, pid)
+    old = state.get("name")
+    if old and old != name and points_to(pointer_path(old), mailbox):
+        pointer_path(old).unlink(missing_ok=True)
+    state["name"] = name
+
+
+def pointer_cwd(name):
+    try:
+        return json.loads(pointer_path(name).read_text()).get("cwd", "") if name else ""
+    except (OSError, ValueError):
+        return ""
+
+
+def titled(hook, state, mailbox):
+    """The name a session title the user gave in Claude Code makes, or None when it is unchanged since last applied
+    (so a later rename here stands) or has nothing a name can use. Another session's name is not taken over."""
+    title = hook.get("session_title")
+    base = sanitize(title or "", "")
+    if not base or title == state.get("title"):
+        return None
+    state["title"] = title
+    p = pointer_path(base)
+    return base if not p.exists() or points_to(p, mailbox) else choose_name(base, hook.get("session_id", ""), mailbox)
+
+
 def mailbox_for(data, session_id):
     return Path(data) / "mailbox" / sanitize(session_id)
 
@@ -193,9 +221,10 @@ def session_start(data, hook):
     name = state.get("name")
     if not name or not (not pointer_path(name).exists() or points_to(pointer_path(name), mailbox)):
         name = choose_name(sanitize(os.path.basename(hook.get("cwd", "")) or "session"), hook.get("session_id", ""), mailbox)
+    name = titled(hook, state, mailbox) or name
     pid = claude_pid()
-    write_pointer(name, mailbox, hook.get("cwd", ""), pid)
-    state.update({"name": name, "pid": pid, "session_id": hook.get("session_id", "")})
+    move_pointer(mailbox, state, name, hook.get("cwd", ""), pid)
+    state.update({"pid": pid, "session_id": hook.get("session_id", "")})
     save(mailbox, state)
     set_status(data, pid, "idle")
     script = Path(__file__).resolve()
@@ -222,6 +251,18 @@ def sweep(data, keep):
     for d in marks.iterdir() if marks.exists() else []:
         if d.name.isdigit() and not alive(int(d.name)):
             shutil.rmtree(d, ignore_errors=True)
+
+
+def retitle(data, hook):
+    """A /rename at the terminal fires no hook, so each prompt looks for a new session title."""
+    mailbox = mailbox_for(data, hook.get("session_id", ""))
+    if not (mailbox / "outbox").exists():
+        return
+    state = load(mailbox)
+    name = titled(hook, state, mailbox)
+    if name:
+        move_pointer(mailbox, state, name, pointer_cwd(state.get("name")), state.get("pid") or claude_pid())
+        save(mailbox, state)
 
 
 def session_end(data, hook):
@@ -365,15 +406,7 @@ def rename(mailbox, new):
     target = pointer_path(name)
     if target.exists() and not points_to(target, mailbox):
         sys.exit(f"another session is already called {name}")
-    old = state.get("name")
-    try:
-        cwd = json.loads(pointer_path(old).read_text()).get("cwd", "") if old else ""
-    except (OSError, ValueError):
-        cwd = ""
-    write_pointer(name, mailbox, cwd, state.get("pid") or claude_pid())
-    if old and old != name and points_to(pointer_path(old), mailbox):
-        pointer_path(old).unlink(missing_ok=True)
-    state["name"] = name
+    move_pointer(mailbox, state, name, pointer_cwd(state.get("name")), state.get("pid") or claude_pid())
     save(mailbox, state)
     print(f"Animus now knows this session as {name}")
 
@@ -431,6 +464,7 @@ def main(argv):
             if not hook.get("prompt", "").lstrip().startswith(("<task-notification", "<cross-session-message")):
                 mark(data, pid, "prompted")
             answered(data, hook, new_turn=True)
+            retitle(data, hook)
         elif command == "tool-done":
             set_status(data, process(data, hook), "working")
             answered(data, hook, new_turn=False)

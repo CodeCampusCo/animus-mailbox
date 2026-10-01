@@ -5,7 +5,9 @@ sends a message to Animus, the voice assistant, so that Animus can tell the user
 voice; the agent does its own work, with its own loop and its own security.
 
 Claude Code sessions need none of this by hand: the plugin in this repository does it (see the
-README).
+README). It names a session by the name the user gave it in Claude Code (`claude --name`,
+`/rename`; a `/rename` at the terminal takes effect on the next prompt), or else by its folder and
+the start of its session id.
 
 The mailbox belongs to the agent and lives in the agent's own space. Animus only knows where it is,
 from a pointer the agent leaves in a shared address book.

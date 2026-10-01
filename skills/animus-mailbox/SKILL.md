@@ -39,7 +39,9 @@ python3 <script> wait <mailbox> 20
 
 ## Rename this session
 
-When the user asks Animus to call this session something else ("call yourself api"):
+A session the user named in Claude Code (`claude --name`, `/rename`) is known by that name; a
+`/rename` at the terminal takes effect on the next prompt. When the user asks Animus to call this
+session something else ("call yourself api"):
 
 ```sh
 python3 <script> rename <mailbox> api
