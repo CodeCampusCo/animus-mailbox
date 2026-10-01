@@ -28,8 +28,9 @@ class Mailbox(unittest.TestCase):
     def tool(self, *args, stdin=""):
         return subprocess.run([sys.executable, str(SCRIPT), *args], input=stdin, capture_output=True, text=True, env=self.env)
 
-    def start(self, session="3fa9c1d2-aaaa", cwd="/work/animus"):
-        out = self.run_hook("session-start", {"session_id": session, "cwd": cwd})
+    def start(self, session="3fa9c1d2-aaaa", cwd="/work/animus", title=None):
+        hook = {"session_id": session, "cwd": cwd} | ({"session_title": title} if title else {})
+        out = self.run_hook("session-start", hook)
         return Path(self.data / "mailbox" / session), json.loads(out)
 
     def outbox(self, mailbox):
@@ -116,6 +117,45 @@ class Mailbox(unittest.TestCase):
         self.assertEqual(self.tool("rename", str(mailbox), "API").returncode, 0)
         self.assertTrue((self.registry / "claude-api.json").exists())
         self.assertFalse((self.registry / "claude-animus-3f.json").exists())
+
+    def names(self):
+        return sorted(p.name for p in self.registry.iterdir())
+
+    def test_a_named_session_uses_its_claude_code_name(self):
+        mailbox, out = self.start(title="Animus Lead")
+        self.assertEqual(self.names(), ["claude-animus-lead.json"])
+        self.assertEqual(json.loads((self.registry / "claude-animus-lead.json").read_text())["mailbox"], str(mailbox))
+        self.assertIn('knows this session as "animus-lead"', out["hookSpecificOutput"]["additionalContext"])
+
+    def test_a_rename_at_the_terminal_takes_effect_on_the_next_prompt(self):
+        mailbox, _ = self.start()
+        self.run_hook("prompt", {"session_id": "3fa9c1d2-aaaa", "prompt": "hi", "session_title": "lead"})
+        self.assertEqual(self.names(), ["claude-lead.json"])
+        self.assertEqual(json.loads((self.registry / "claude-lead.json").read_text())["cwd"], "/work/animus")
+        self.assertEqual(json.loads((mailbox / "state.json").read_text())["name"], "lead")
+
+    def test_a_title_another_session_holds_takes_a_suffix(self):
+        lead, _ = self.start(title="lead")
+        _, out = self.start("57000000-bbbb", title="lead")
+        self.assertEqual(self.names(), ["claude-lead-57.json", "claude-lead.json"])
+        self.assertEqual(json.loads((self.registry / "claude-lead.json").read_text())["mailbox"], str(lead))
+        self.assertIn('knows this session as "lead-57"', out["hookSpecificOutput"]["additionalContext"])
+
+    def test_a_rename_through_the_plugin_is_not_undone_by_the_same_title(self):
+        mailbox, _ = self.start(title="lead")
+        self.assertEqual(self.tool("rename", str(mailbox), "api").returncode, 0)
+        self.run_hook("prompt", {"session_id": "3fa9c1d2-aaaa", "prompt": "hi", "session_title": "lead"})
+        self.assertEqual(self.names(), ["claude-api.json"])
+        self.start(title="lead")   # resume
+        self.assertEqual(self.names(), ["claude-api.json"])
+        self.run_hook("prompt", {"session_id": "3fa9c1d2-aaaa", "prompt": "hi", "session_title": "builder"})
+        self.assertEqual(self.names(), ["claude-builder.json"])
+
+    def test_a_title_with_nothing_a_name_can_use_is_no_title(self):
+        self.start(title="ทีมหลัก")
+        self.assertEqual(self.names(), ["claude-animus-3f.json"])
+        self.run_hook("prompt", {"session_id": "3fa9c1d2-aaaa", "prompt": "hi", "session_title": "!!"})
+        self.assertEqual(self.names(), ["claude-animus-3f.json"])
 
     def test_end_and_sweep_clean_up(self):
         mailbox, _ = self.start()
